@@ -1,0 +1,54 @@
+#Define deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: serviceregistry
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: serviceregistry
+  template:
+    metadata:
+      labels:
+        app: serviceregistry
+    spec:
+      containers:
+        - name: serviceregistry
+          image: palanim/service-registery:latest
+          imagePullPolicy: Always
+          env:
+            - name: spring.cloud.config.uri
+              value: "http://configservice:8888/"
+          ports:
+            - containerPort: 8761
+          resources:
+            requests:
+              cpu: 100m
+              memory: 64Mi
+            limits:
+              memory: 256Mi
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8761
+            initialDelaySeconds: 30
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8761
+            initialDelaySeconds: 30
+            timeoutSeconds: 10
+
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: serviceregistry
+spec:
+  selector:
+    app: serviceregistry
+  ports:
+    - port: 8761
+      targetPort: 8761
+      name: http

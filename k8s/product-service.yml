@@ -1,0 +1,68 @@
+#Define deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: productservice
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: productservice
+  template:
+    metadata:
+      labels:
+        app: productservice
+    spec:
+      containers:
+        - name: productservice
+          image: palanim/product-service:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+          resources:
+            requests:
+              cpu: 100m
+              memory: 512Mi
+            limits:
+              memory: 512Mi
+          env:
+            - name: SERVER_PORT
+              value: "80"
+            - name: spring.cloud.config.uri
+              value: "http://configservice:8888/"
+            - name: EUREKA_URL
+              value: "http://serviceregistry:8761/eureka/"
+            - name: MYSQL_HOST
+              value: "mysql"
+            - name: MYSQL_USER
+              value: "root"
+            - name: MYSQL_PASSWORD
+              value: "p@ss"
+            - name: REDIS_HOST
+              value: "redis-master.default.svc.cluster.local"
+            - name: REDIS_PORT
+              value: "6379"
+            - name: MONGO_HOST
+              value: "mongo-mongodb"
+            - name: MONGO_PORT
+              value: "27017"
+            - name: MONGO_USERNAME
+              value: "admin"
+            - name: MONGO_PASSWORD
+              value: "password"
+            - name: MONGO_DATABASE
+              value: "ow_products_db"
+
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: productservice
+spec:
+  ports:
+    - name: http
+      port: 8080
+      targetPort: 8080
+      protocol: TCP
+  selector:
+    app: productservice

@@ -1,0 +1,70 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: Gateway
+metadata:
+  name: api-gateway
+spec:
+  selector:
+    istio: ingressgateway
+  servers:
+    - port:
+        number: 80
+        name: http
+        protocol: HTTP
+      hosts:
+        - "*"
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: organiworld-vs
+spec:
+  hosts:
+    - "*"
+  gateways:
+    - api-gateway
+  http:
+    - match:
+        - uri:
+            prefix: /api/v1/orders
+      route:
+        - destination:
+            host: orderservice.default.svc.cluster.local
+            port:
+              number: 9005
+      timeout: 3s
+      retries:
+        attempts: 3
+        perTryTimeout: 2s
+        retryOn: gateway-error,connect-failure,refused-stream
+    - match:
+        - uri:
+            prefix: /login
+        - uri:
+            prefix: /admin
+        - uri:
+            prefix: /api/v1/products
+      route:
+        - destination:
+            host: productservice.default.svc.cluster.local
+            port:
+              number: 8080
+      timeout: 3s
+      retries:
+        attempts: 3
+        perTryTimeout: 2s
+        retryOn: gateway-error,connect-failure,refused-stream
+    - match:
+        - uri:
+            prefix: /api/v1/customers
+        - uri:
+            prefix: /api/v1/customer
+      route:
+        - destination:
+            host: userservice.default.svc.cluster.local
+            port:
+              number: 9010
+      timeout: 3s
+      retries:
+        attempts: 3
+        perTryTimeout: 2s
+        retryOn: gateway-error,connect-failure,refused-stream
